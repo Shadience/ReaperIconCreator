@@ -3,15 +3,17 @@ TO DO:
 - Make web version 0%/100%
 - Make test button like in REAPER 5%/100%
 - Auto detect REAPER folder 0%/100%
+- Make saving settings 5%/100%
 */
-
+#![windows_subsystem = "windows"]
 use std::{env::temp_dir, path::PathBuf};
+
+use rfd::{FileDialog, MessageDialog};
+
+use image::{imageops::{resize, FilterType::{self}}, DynamicImage, GenericImage, RgbaImage, open};
 
 use eframe::{egui::{self, vec2, ThemePreference, Vec2}, NativeOptions};
 use egui_extras::install_image_loaders;
-use image::{imageops::{resize, FilterType::{self}}, DynamicImage, GenericImage, RgbaImage, open};
-
-use rfd::{FileDialog, MessageDialog};
 
 fn main() -> eframe::Result
 {
@@ -45,6 +47,9 @@ impl eframe::App for App
     }
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame)
     {
+        let path = temp_dir().to_str().unwrap().to_string() + "result.png";
+        let path1 = temp_dir().to_str().unwrap().to_string() + "result150.png";
+        let path2 = temp_dir().to_str().unwrap().to_string() + "result200.png";
         egui::TopBottomPanel::top("Adjustments").show(ctx, |ui| 
         {
             ui.horizontal(|ui|
@@ -81,9 +86,6 @@ impl eframe::App for App
             {
                 // println!("{}", temp_dir().join("result.png").to_str().unwrap());
                 // println!("{}", "file://".to_string() + &temp_dir().join("result.png").to_str().unwrap().replace(r"\", "/"));
-                let path = temp_dir().to_str().unwrap().to_string() + "result.png";
-                let path1 = temp_dir().to_str().unwrap().to_string() + "result150.png";
-                let path2 = temp_dir().to_str().unwrap().to_string() + "result200.png";
                 self.image_to_icon(&self.image, 30).save_with_format(&path, image::ImageFormat::Png).unwrap();
                 self.image_to_icon(&self.image, 45).save_with_format(&path1, image::ImageFormat::Png).unwrap();
                 self.image_to_icon(&self.image, 60).save_with_format(&path2, image::ImageFormat::Png).unwrap();
@@ -92,13 +94,10 @@ impl eframe::App for App
                 // ctx.request_repaint();
                 // println!("{}", path);
             }
-            ui.allocate_space(Vec2{x:0f32,y:5f32});
+            ui.add_space(5f32);
         });
         egui::CentralPanel::default().show(ctx, |ui|
         {
-            let path = temp_dir().to_str().unwrap().to_string() + "result.png";
-            let path1 = temp_dir().to_str().unwrap().to_string() + "result150.png";
-            let path2 = temp_dir().to_str().unwrap().to_string() + "result200.png";
             ui.horizontal(|ui| {
                 ui.vertical(|ui|
                 {
@@ -135,7 +134,7 @@ impl eframe::App for App
         });
         egui::TopBottomPanel::bottom("File stuff").show(ctx, |ui|
         {
-            ui.allocate_space(Vec2{x:0f32,y:5f32});
+            ui.add_space(5f32);
             ui.horizontal(|ui| 
             {
                 if ui.button("Import").clicked()
@@ -200,7 +199,7 @@ impl eframe::App for App
                     }
                 }
             });
-            ui.allocate_space(Vec2{x:0f32,y:5f32});
+            ui.add_space(5f32);
         });
     }
 }
