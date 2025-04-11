@@ -1,7 +1,8 @@
 /*
 TO DO:
 - Make web version 0%/100%
-- Make test button like in reaper 5%/100%
+- Make test button like in REAPER 5%/100%
+- Auto detect REAPER folder 0%/100%
 */
 
 use std::{env::temp_dir, path::PathBuf};
