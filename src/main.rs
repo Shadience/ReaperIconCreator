@@ -139,7 +139,11 @@ impl eframe::App for App
             {
                 if ui.button("Import").clicked()
                 {
-                    self.image = open(self.import_file_dialog.clone().pick_file().unwrap()).unwrap();
+                    let path = self.import_file_dialog.clone().pick_file();
+                    if path != None
+                    {
+                        self.image = open(path.unwrap()).unwrap();
+                    }
                 }
                 if ui.button("Export").clicked()
                 {
