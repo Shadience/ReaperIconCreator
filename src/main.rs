@@ -1,9 +1,7 @@
 /*
 TO DO:
-- Result will be named same as input image 0%/100%
-- Auto move to REAPER/Data/toolbar-icons 80%/100%
-- Create application interface 70%/100%
 - Make web version 0%/100%
+- Make test button like in reaper 5%/100%
 */
 
 use std::{env::temp_dir, path::PathBuf};
@@ -36,6 +34,14 @@ enum ExportZoom
 
 impl eframe::App for App
 {
+    fn raw_input_hook(&mut self, _ctx: &egui::Context, _raw_input: &mut egui::RawInput) {
+        let path = temp_dir().to_str().unwrap().to_string() + "result.png";
+        let path1 = temp_dir().to_str().unwrap().to_string() + "result150.png";
+        let path2 = temp_dir().to_str().unwrap().to_string() + "result200.png";
+        self.image_to_icon(&self.image, 30).save_with_format(&path, image::ImageFormat::Png).unwrap();
+        self.image_to_icon(&self.image, 45).save_with_format(&path1, image::ImageFormat::Png).unwrap();
+        self.image_to_icon(&self.image, 60).save_with_format(&path2, image::ImageFormat::Png).unwrap();
+    }
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame)
     {
         egui::TopBottomPanel::top("Adjustments").show(ctx, |ui| 
@@ -80,8 +86,9 @@ impl eframe::App for App
                 self.image_to_icon(&self.image, 30).save_with_format(&path, image::ImageFormat::Png).unwrap();
                 self.image_to_icon(&self.image, 45).save_with_format(&path1, image::ImageFormat::Png).unwrap();
                 self.image_to_icon(&self.image, 60).save_with_format(&path2, image::ImageFormat::Png).unwrap();
-                ctx.forget_image(&path);
-                ctx.request_repaint();
+                // ctx.forget_image(&path);
+                ctx.forget_all_images();
+                // ctx.request_repaint();
                 // println!("{}", path);
             }
             ui.allocate_space(Vec2{x:0f32,y:5f32});
@@ -101,6 +108,18 @@ impl eframe::App for App
                     ui.label("200 🔍");
                     ui.allocate_ui(Vec2{x:180f32,y:60f32}, |ui| {ui.image(format!("file://{path2}"))});
                 });
+                // ui.add_space(5f32);
+                // ui.vertical(|ui|
+                // {
+                //     ui.label("Test Button");
+                //     ui.add_space(5f32);
+                //     ui.allocate_ui(Vec2{x:30f32,y:30f32}, |ui| {ui.image(format!("file://{path}"))});
+                //     ui.add_space(35f32);
+                //     ui.;
+                //     ui.add_space(55f32);
+                //     ui.
+                // });
+                ui.add_space(5f32);
                 ui.vertical(|ui|
                 {
                     ui.label("Export");
