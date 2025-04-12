@@ -3,7 +3,7 @@ TO DO:
 - Make web version 0%/100%
 - Make test button like in REAPER 5%/100%
 - Auto detect REAPER folder 0%/100%
-- Make saving settings 5%/100%
+- Make code cleaner -1%/100%
 */
 #![windows_subsystem = "windows"]
 use std::{env::temp_dir, path::PathBuf};
@@ -27,17 +27,13 @@ fn main() -> eframe::Result
     )
 }
 
-#[derive(PartialEq)]
-enum ExportZoom 
-{
-    FIRST,
-    SECOND,
-    THIRD
-}
-
 impl eframe::App for App
 {
-    fn raw_input_hook(&mut self, _ctx: &egui::Context, _raw_input: &mut egui::RawInput) {
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, &self.state);
+    }
+    fn raw_input_hook(&mut self, _ctx: &egui::Context, _raw_input: &mut egui::RawInput) // Saving empty image to temp
+    {
         let path = temp_dir().to_str().unwrap().to_string() + "result.png";
         let path1 = temp_dir().to_str().unwrap().to_string() + "result150.png";
         let path2 = temp_dir().to_str().unwrap().to_string() + "result200.png";
@@ -56,44 +52,53 @@ impl eframe::App for App
             {
                 ui.vertical(|ui|
                 {
-                    ui.add(egui::Slider::new(&mut self.on_hover_brightness, -100..=100).text("On Hover Brightness"));
-                    ui.add(egui::Slider::new(&mut self.on_hover_contrast, -100f32..=100f32).text("On Hover Contrast"));
-                    ui.add(egui::Slider::new(&mut self.on_hover_hue, 0..=360).text("On Hover Hue"));
+                    ui.add(egui::Slider::new(&mut self.state.on_hover_hue, 0..=360).text("On Hover Hue"));
+                    ui.add(egui::Slider::new(&mut self.state.on_hover_contrast, -100f32..=100f32).text("On Hover Contrast"));
+                    ui.add(egui::Slider::new(&mut self.state.on_hover_brightness, -100..=100).text("On Hover Brightness"));
                 });
                 ui.vertical(|ui|
                 {
-                    ui.add(egui::Slider::new(&mut self.clicked_brightness, -100..=100).text("Clicked Brightness"));
-                    ui.add(egui::Slider::new(&mut self.clicked_contrast, -100f32..=100f32).text("Clicked Contrast"));
-                    ui.add(egui::Slider::new(&mut self.clicked_hue, 0..=360).text("Clicked Hue"));
+                    ui.add(egui::Slider::new(&mut self.state.clicked_hue, 0..=360).text("Clicked Hue"));
+                    ui.add(egui::Slider::new(&mut self.state.clicked_contrast, -100f32..=100f32).text("Clicked Contrast"));
+                    ui.add(egui::Slider::new(&mut self.state.clicked_brightness, -100..=100).text("Clicked Brightness"));
                 });
                 ui.vertical(|ui|
                 {
-                    let f = self.filter_type;
+                    let f = self.state.filter_type;
                     egui::ComboBox::from_label("Filter Type").selected_text(format!("{f:?}")).show_ui(ui, |ui| 
                     {
-                        ui.selectable_value(&mut self.filter_type, FilterType::Nearest, "Nearest Neighbour");
-                        ui.selectable_value(&mut self.filter_type, FilterType::Triangle, "Linear: Triangle");
-                        ui.selectable_value(&mut self.filter_type, FilterType::CatmullRom, "Cubic: CatmullRom");
-                        ui.selectable_value(&mut self.filter_type, FilterType::Gaussian, "Gaussian");
-                        ui.selectable_value(&mut self.filter_type, FilterType::Lanczos3, "Lanczos with window 3");
+                        ui.selectable_value(&mut self.state.filter_type, FilterType::Nearest, "Nearest Neighbour");
+                        ui.selectable_value(&mut self.state.filter_type, FilterType::Triangle, "Linear: Triangle");
+                        ui.selectable_value(&mut self.state.filter_type, FilterType::CatmullRom, "Cubic: CatmullRom");
+                        ui.selectable_value(&mut self.state.filter_type, FilterType::Gaussian, "Gaussian");
+                        ui.selectable_value(&mut self.state.filter_type, FilterType::Lanczos3, "Lanczos with window 3");
                     });
                     //ui.add_space(20f32);
                     egui::TextEdit::singleline(&mut self.result_name).hint_text("Result file name...").show(ui);
                 });
             });
             
-            if ui.button("Render").clicked()
+            ui.horizontal(|ui| 
             {
-                // println!("{}", temp_dir().join("result.png").to_str().unwrap());
-                // println!("{}", "file://".to_string() + &temp_dir().join("result.png").to_str().unwrap().replace(r"\", "/"));
-                self.image_to_icon(&self.image, 30).save_with_format(&path, image::ImageFormat::Png).unwrap();
-                self.image_to_icon(&self.image, 45).save_with_format(&path1, image::ImageFormat::Png).unwrap();
-                self.image_to_icon(&self.image, 60).save_with_format(&path2, image::ImageFormat::Png).unwrap();
-                // ctx.forget_image(&path);
-                ctx.forget_all_images();
-                // ctx.request_repaint();
-                // println!("{}", path);
-            }
+                if ui.button("Render").clicked()
+                {
+                    // println!("{}", temp_dir().join("result.png").to_str().unwrap());
+                    // println!("{}", "file://".to_string() + &temp_dir().join("result.png").to_str().unwrap().replace(r"\", "/"));
+                    self.image_to_icon(&self.image, 30).save_with_format(&path, image::ImageFormat::Png).unwrap();
+                    self.image_to_icon(&self.image, 45).save_with_format(&path1, image::ImageFormat::Png).unwrap();
+                    self.image_to_icon(&self.image, 60).save_with_format(&path2, image::ImageFormat::Png).unwrap();
+                    // ctx.forget_image(&path);
+                    ctx.forget_all_images();
+                    // ctx.request_repaint();
+                    // println!("{}", path);
+                }
+                if ui.button("Restore default settings").clicked()
+                {
+                    let mut s = State::default();
+                    s.reaper_path = self.state.reaper_path.clone(); // Reaper path don't need to be restored
+                    self.state = s;
+                }
+            });
             ui.add_space(5f32);
         });
         egui::CentralPanel::default().show(ctx, |ui|
@@ -124,11 +129,11 @@ impl eframe::App for App
                 {
                     ui.label("Export");
                     ui.add_space(5f32);
-                    ui.radio_value(&mut self.export_type, ExportZoom::FIRST, "");
+                    ui.radio_value(&mut self.state.export_type, ExportZoom::FIRST, "");
                     ui.add_space(35f32);
-                    ui.radio_value(&mut self.export_type, ExportZoom::SECOND, "");
+                    ui.radio_value(&mut self.state.export_type, ExportZoom::SECOND, "");
                     ui.add_space(55f32);
-                    ui.radio_value(&mut self.export_type, ExportZoom::THIRD, "");
+                    ui.radio_value(&mut self.state.export_type, ExportZoom::THIRD, "");
                 });
             });
         });
@@ -150,7 +155,7 @@ impl eframe::App for App
                     let path = self.export_file_dialog.clone().set_file_name(&self.result_name).save_file();
                     if path != None
                     {
-                        match &self.export_type
+                        match &self.state.export_type
                         {
                             ExportZoom::FIRST =>
                             {
@@ -172,7 +177,7 @@ impl eframe::App for App
                     let path = FileDialog::new().pick_folder();
                     if path != None
                     {
-                        self.reaper_path = path.unwrap().join(r"Data\toolbar_icons");
+                        self.state.reaper_path = path.unwrap().join(r"Data\toolbar_icons");
                     }
                     // println!("{}", self.reaper_path.to_str().unwrap());
                     // println!("{}", self.reaper_path.join(r"150\").to_str().unwrap());
@@ -180,19 +185,19 @@ impl eframe::App for App
                 }
                 if ui.button("Export directly to REAPER").clicked()
                 {
-                    if self.reaper_path != PathBuf::default()
+                    if self.state.reaper_path != PathBuf::default()
                     {
-                        let path1 = self.export_file_dialog.clone().set_file_name(&self.result_name).set_directory(&self.reaper_path).save_file();
+                        let path1 = self.export_file_dialog.clone().set_file_name(&self.result_name).set_directory(&self.state.reaper_path).save_file();
                         if path1 != None
                         {
                             self.image_to_icon(&self.image, 30).save_with_format(path1.unwrap(), image::ImageFormat::Png).unwrap();
                         }
-                        let path2 = self.export_file_dialog.clone().set_file_name(&self.result_name).set_directory(&self.reaper_path.join(r"150\")).save_file();
+                        let path2 = self.export_file_dialog.clone().set_file_name(&self.result_name).set_directory(&self.state.reaper_path.join(r"150\")).save_file();
                         if path2 != None
                         {
                             self.image_to_icon(&self.image, 45).save_with_format(path2.unwrap(), image::ImageFormat::Png).unwrap();
                         }
-                        let path3 = self.export_file_dialog.clone().set_file_name(&self.result_name).set_directory(&self.reaper_path.join(r"200\")).save_file();
+                        let path3 = self.export_file_dialog.clone().set_file_name(&self.result_name).set_directory(&self.state.reaper_path.join(r"200\")).save_file();
                         if path3 != None
                         {
                             self.image_to_icon(&self.image, 30).save_with_format(path3.unwrap(), image::ImageFormat::Png).unwrap();
@@ -214,24 +219,22 @@ impl App
     {
         cc.egui_ctx.set_theme(ThemePreference::System);
         install_image_loaders(&cc.egui_ctx);
-        Self 
+        let mut s = Self 
         {
-            reaper_path: PathBuf::default(),
+            state: State::default(),
             image: DynamicImage::new(30, 30, image::ColorType::Rgba8),
             // image_on_hover: DynamicImage::new(30, 30, image::ColorType::Rgba8),
             // image_clicked: DynamicImage::new(30, 30, image::ColorType::Rgba8),
-            on_hover_hue: 0,
-            on_hover_contrast: 0f32,
-            on_hover_brightness: -30,
-            clicked_hue: 0,
-            clicked_contrast: 15f32,
-            clicked_brightness: 0,
-            filter_type: FilterType::Lanczos3,
+            result_name: "result".to_string(),
             import_file_dialog: FileDialog::new().add_filter("Images", &["png", "jpeg", "jpg", "gif", "bmp", "ico", "farbfeld", "hdr", "exr", "pnm", "qoi", "tga", "tiff"]),
             export_file_dialog: FileDialog::new().add_filter("png", &["png"]),
-            result_name: "result".to_string(),
-            export_type: ExportZoom::FIRST,
+        };
+        if let Some(storage) = cc.storage {
+            if let Some(state) = eframe::get_value(storage, eframe::APP_KEY) {
+                s.state = state;
+            }
         }
+        s
     }
     
     // Sizes:
@@ -240,12 +243,12 @@ impl App
     // 200: 60
     fn image_to_icon(&self, img: &DynamicImage, size: u32) -> RgbaImage
     {
-        let img = DynamicImage::ImageRgba8(resize(img, size, size, self.filter_type)); // open change to input function
+        let img = DynamicImage::ImageRgba8(resize(img, size, size, self.state.filter_type)); // open change to input function
         let mut res = RgbaImage::new(size*3, size);
 
         res.copy_from(&img, 0, 0).unwrap(); // normal
-        res.copy_from(&img.huerotate(self.on_hover_hue).adjust_contrast(self.on_hover_contrast).brighten(self.on_hover_brightness), size, 0).unwrap(); // on mouse hover
-        res.copy_from(&img.huerotate(self.clicked_hue).adjust_contrast(self.clicked_contrast).brighten(self.clicked_brightness), size*2, 0).unwrap(); // clicked
+        res.copy_from(&img.huerotate(self.state.on_hover_hue).adjust_contrast(self.state.on_hover_contrast).brighten(self.state.on_hover_brightness), size, 0).unwrap(); // on mouse hover
+        res.copy_from(&img.huerotate(self.state.clicked_hue).adjust_contrast(self.state.clicked_contrast).brighten(self.state.clicked_brightness), size*2, 0).unwrap(); // clicked
 
         res
     }
@@ -253,12 +256,20 @@ impl App
 
 struct App
 {
-    export_type: ExportZoom,
-    reaper_path: PathBuf,
+    pub state: State,
     image: DynamicImage,
     // image_on_hover: DynamicImage,
     // image_clicked: DynamicImage,
     result_name: String,
+    import_file_dialog: FileDialog,
+    export_file_dialog: FileDialog,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+struct State 
+{
+    export_type: ExportZoom,
+    reaper_path: PathBuf,
     on_hover_hue: i32,
     on_hover_contrast: f32,
     on_hover_brightness: i32,
@@ -266,6 +277,30 @@ struct App
     clicked_contrast: f32,
     clicked_brightness: i32,
     filter_type: FilterType,
-    import_file_dialog: FileDialog,
-    export_file_dialog: FileDialog,
+}
+
+impl Default for State
+{
+    fn default() -> Self {
+        Self
+        {
+            export_type: ExportZoom::FIRST,
+            reaper_path: PathBuf::default(),
+            on_hover_hue: 0,
+            on_hover_contrast: 0f32,
+            on_hover_brightness: -30,
+            clicked_hue: 0,
+            clicked_contrast: 15f32,
+            clicked_brightness: 0,
+            filter_type: FilterType::Lanczos3,
+        }
+    }
+}
+
+#[derive(PartialEq, serde::Deserialize, serde::Serialize)]
+enum ExportZoom 
+{
+    FIRST,
+    SECOND,
+    THIRD
 }
