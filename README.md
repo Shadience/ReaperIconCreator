@@ -12,10 +12,10 @@ This tool creates icons for Reaper's toolbar from your images.
 - **Restore default settings** - The app has an auto-save feature. This button returns the settings to the original version (except path to Reaper).
 ### Central Panel:
 - **100/150/200** - The different icon sizes that can be in Reaper.
-- **Export buttons** - Select the size of the icon you are exporting with the “Export” button.
+- **Export checkboxes** - Select the size of the icons you are exporting with the “Export” button.
 ### Bottom Panel:
 - **Import** - Select an image for modification.
-- **Export** - Exports a single icon of the selected size.
+- **Export** - Exports icons of selected sizes.
 - **Select REAPER folder** - Select the main Reaper folder. You can find it by clicking “Show REAPER resource path in explorer/finder...” in the “Options” window in Reaper.
 - **Export directly to REAPER** - Automatically exports all icon sizes to the Reaper folder. For now, a different save window opens for each individual icon.
 ## Used tools:

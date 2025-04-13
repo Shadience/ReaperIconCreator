@@ -3,6 +3,9 @@ TO DO:
 - Make web version 0%/100%
 - Make test button like in REAPER 5%/100%
 - Auto detect REAPER folder 0%/100%
+- Mass drag&drop import (and export) 0%/100%
+- Change settings for existing reaper icons 0%/100%
+- Change UI scale for existing reaper icons 0%/100%
 - Make code cleaner -1%/100%
 */
 #![windows_subsystem = "windows"]
@@ -32,20 +35,11 @@ impl eframe::App for App
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, eframe::APP_KEY, &self.state);
     }
-    fn raw_input_hook(&mut self, _ctx: &egui::Context, _raw_input: &mut egui::RawInput) // Saving empty image to temp
-    {
-        let path = temp_dir().to_str().unwrap().to_string() + "result.png";
-        let path1 = temp_dir().to_str().unwrap().to_string() + "result150.png";
-        let path2 = temp_dir().to_str().unwrap().to_string() + "result200.png";
-        self.image_to_icon(&self.image, 30).save_with_format(&path, image::ImageFormat::Png).unwrap();
-        self.image_to_icon(&self.image, 45).save_with_format(&path1, image::ImageFormat::Png).unwrap();
-        self.image_to_icon(&self.image, 60).save_with_format(&path2, image::ImageFormat::Png).unwrap();
-    }
+    // Here I used _raw_input_hook, thinking it happens only one time at start)))
+    // The app rendered the picture every fucking frame.
+    // What's why it was so laggy
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame)
     {
-        let path = temp_dir().to_str().unwrap().to_string() + "result.png";
-        let path1 = temp_dir().to_str().unwrap().to_string() + "result150.png";
-        let path2 = temp_dir().to_str().unwrap().to_string() + "result200.png";
         egui::TopBottomPanel::top("Adjustments").show(ctx, |ui| 
         {
             ui.horizontal(|ui|
@@ -84,13 +78,10 @@ impl eframe::App for App
                 {
                     // println!("{}", temp_dir().join("result.png").to_str().unwrap());
                     // println!("{}", "file://".to_string() + &temp_dir().join("result.png").to_str().unwrap().replace(r"\", "/"));
-                    self.image_to_icon(&self.image, 30).save_with_format(&path, image::ImageFormat::Png).unwrap();
-                    self.image_to_icon(&self.image, 45).save_with_format(&path1, image::ImageFormat::Png).unwrap();
-                    self.image_to_icon(&self.image, 60).save_with_format(&path2, image::ImageFormat::Png).unwrap();
-                    // ctx.forget_image(&path);
+                    self.image_to_icon(&self.image, 30).save_with_format(&self.render_path, image::ImageFormat::Png).unwrap();
+                    self.image_to_icon(&self.image, 45).save_with_format(&self.render_path150, image::ImageFormat::Png).unwrap();
+                    self.image_to_icon(&self.image, 60).save_with_format(&self.render_path200, image::ImageFormat::Png).unwrap();
                     ctx.forget_all_images();
-                    // ctx.request_repaint();
-                    // println!("{}", path);
                 }
                 if ui.button("Restore default settings").clicked()
                 {
@@ -107,33 +98,39 @@ impl eframe::App for App
                 ui.vertical(|ui|
                 {
                     ui.label("100 🔍 (Default)");
-                    ui.allocate_ui(Vec2{x:90f32,y:30f32}, |ui| {ui.image(format!("file://{path}"))});
+                    ui.allocate_ui(Vec2{x:90f32,y:30f32}, |ui| {ui.image("file://".to_string() + &self.render_path)});
                     ui.label("150 🔍");
-                    ui.allocate_ui(Vec2{x:135f32,y:45f32}, |ui| {ui.image(format!("file://{path1}"))});
+                    ui.allocate_ui(Vec2{x:135f32,y:45f32}, |ui| {ui.image("file://".to_string() + &self.render_path150)});
                     ui.label("200 🔍");
-                    ui.allocate_ui(Vec2{x:180f32,y:60f32}, |ui| {ui.image(format!("file://{path2}"))});
+                    ui.allocate_ui(Vec2{x:180f32,y:60f32}, |ui| {ui.image("file://".to_string() + &self.render_path200)});
                 });
-                // ui.add_space(5f32);
+                ui.add_space(5f32);
                 // ui.vertical(|ui|
                 // {
                 //     ui.label("Test Button");
                 //     ui.add_space(5f32);
                 //     ui.allocate_ui(Vec2{x:30f32,y:30f32}, |ui| {ui.image(format!("file://{path}"))});
                 //     ui.add_space(35f32);
-                //     ui.;
+                //     ui.allocate_ui(Vec2{x:30f32,y:30f32}, |ui| {ui.image(format!("file://{path1}"))});
                 //     ui.add_space(55f32);
-                //     ui.
+                //     ui.allocate_ui(Vec2{x:30f32,y:30f32}, |ui| {ui.image(format!("file://{path2}"))});
                 // });
                 ui.add_space(5f32);
                 ui.vertical(|ui|
                 {
                     ui.label("Export");
+                    // ui.add_space(5f32);
+                    // ui.radio_value(&mut self.state.export_type, ExportZoom::FIRST, "");
+                    // ui.add_space(35f32);
+                    // ui.radio_value(&mut self.state.export_type, ExportZoom::SECOND, "");
+                    // ui.add_space(55f32);
+                    // ui.radio_value(&mut self.state.export_type, ExportZoom::THIRD, "");
                     ui.add_space(5f32);
-                    ui.radio_value(&mut self.state.export_type, ExportZoom::FIRST, "");
+                    ui.checkbox(&mut self.state.export_type[0], "");
                     ui.add_space(35f32);
-                    ui.radio_value(&mut self.state.export_type, ExportZoom::SECOND, "");
+                    ui.checkbox(&mut self.state.export_type[1], "");
                     ui.add_space(55f32);
-                    ui.radio_value(&mut self.state.export_type, ExportZoom::THIRD, "");
+                    ui.checkbox(&mut self.state.export_type[2], "");
                 });
             });
         });
@@ -152,22 +149,37 @@ impl eframe::App for App
                 }
                 if ui.button("Export").clicked()
                 {
-                    let path = self.export_file_dialog.clone().set_file_name(&self.result_name).save_file();
-                    if path != None
+                    let exports = &self.state.export_type;
+                    for i in 0..3
                     {
-                        match &self.state.export_type
+                        if exports[i]
                         {
-                            ExportZoom::FIRST =>
-                            {
-                                self.image_to_icon(&self.image, 30).save_with_format(path.unwrap(), image::ImageFormat::Png).unwrap();
-                            }
-                            ExportZoom::SECOND =>
-                            {
-                                self.image_to_icon(&self.image, 45).save_with_format(path.unwrap(), image::ImageFormat::Png).unwrap();
-                            }
-                            ExportZoom::THIRD =>
-                            {
-                                self.image_to_icon(&self.image, 60).save_with_format(path.unwrap(), image::ImageFormat::Png).unwrap();
+                            match i as i8 {
+                                0 => 
+                                {
+                                    let path = self.export_file_dialog.clone().set_file_name(&self.result_name).save_file();
+                                    if path != None
+                                    {
+                                        self.image_to_icon(&self.image, 30).save_with_format(path.unwrap(), image::ImageFormat::Png).unwrap();
+                                    }
+                                }
+                                1 => 
+                                {
+                                    let path = self.export_file_dialog.clone().set_file_name(self.result_name.to_string() + "150").save_file();
+                                    if path != None
+                                    {
+                                        self.image_to_icon(&self.image, 45).save_with_format(path.unwrap(), image::ImageFormat::Png).unwrap();
+                                    }
+                                }
+                                2 => 
+                                {
+                                    let path = self.export_file_dialog.clone().set_file_name(self.result_name.to_string() + "200").save_file();
+                                    if path != None
+                                    {
+                                        self.image_to_icon(&self.image, 60).save_with_format(path.unwrap(), image::ImageFormat::Png).unwrap();
+                                    }
+                                }
+                                _ => {}
                             }
                         }
                     }
@@ -228,13 +240,24 @@ impl App
             result_name: "result".to_string(),
             import_file_dialog: FileDialog::new().add_filter("Images", &["png", "jpeg", "jpg", "gif", "bmp", "ico", "farbfeld", "hdr", "exr", "pnm", "qoi", "tga", "tiff"]),
             export_file_dialog: FileDialog::new().add_filter("png", &["png"]),
+            render_path: temp_dir().to_str().unwrap().to_string() + "result.png",
+            render_path150: temp_dir().to_str().unwrap().to_string() + "result150.png",
+            render_path200: temp_dir().to_str().unwrap().to_string() + "result200.png",
         };
         if let Some(storage) = cc.storage {
             if let Some(state) = eframe::get_value(storage, eframe::APP_KEY) {
                 s.state = state;
             }
         }
+        s.start();
         s
+    }
+    
+    fn start(&self)
+    {
+        self.image_to_icon(&self.image, 30).save_with_format(&self.render_path, image::ImageFormat::Png).unwrap();
+        self.image_to_icon(&self.image, 45).save_with_format(&self.render_path150, image::ImageFormat::Png).unwrap();
+        self.image_to_icon(&self.image, 60).save_with_format(&self.render_path200, image::ImageFormat::Png).unwrap();
     }
     
     // Sizes:
@@ -263,12 +286,15 @@ struct App
     result_name: String,
     import_file_dialog: FileDialog,
     export_file_dialog: FileDialog,
+    render_path: String,
+    render_path150: String,
+    render_path200: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
 struct State 
 {
-    export_type: ExportZoom,
+    export_type: [bool; 3],
     reaper_path: PathBuf,
     on_hover_hue: i32,
     on_hover_contrast: f32,
@@ -284,7 +310,7 @@ impl Default for State
     fn default() -> Self {
         Self
         {
-            export_type: ExportZoom::FIRST,
+            export_type: [true, false, false], // 100, 150, 200
             reaper_path: PathBuf::default(),
             on_hover_hue: 0,
             on_hover_contrast: 0f32,
