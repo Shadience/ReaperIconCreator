@@ -11,35 +11,29 @@ jobs:
   linux_test:
     runs-on: ubuntu-latest
     steps:
-    - name: Target
-      run: rustup target add aarch64-unknown-linux-gnu
     - name: Checkout
       uses: actions/checkout@v4
     - name: Run tests
       run: cargo test --verbose
     - name: Build
-      run: cargo build --target aarch64-unknown-linux-gnu --verbose --all-features
+      run: cargo build --verbose --all-features
    
   mac_test:
     runs-on: macos-latest
     steps:
-    - name: Target
-      run: rustup target add aarch64-apple-darwin
     - name: Checkout
       uses: actions/checkout@v4
     - name: Run tests
       run: cargo test --verbose
     - name: Build
-      run: cargo build --target aarch64-apple-darwin --verbose --all-features
+      run: cargo build --verbose --all-features
 
   win_test:
     runs-on: windows-latest
     steps:
-    - name: Target
-      run: rustup target add x86_64-pc-windows-msvc
     - name: Checkout
       uses: actions/checkout@v4
     - name: Run tests
       run: cargo test --verbose
     - name: Build
-      run: cargo build --target x86_64-pc-windows-msvc --verbose --all-features
+      run: cargo build --verbose --all-features
