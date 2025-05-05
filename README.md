@@ -1,7 +1,7 @@
 # Reaper Icon Creator
 This tool creates icons for Reaper's toolbar from your images.
 
-![image](https://github.com/user-attachments/assets/86202cc6-149a-4d19-ba67-1e631a975567)
+![showcase](https://github.com/user-attachments/assets/03f8cab5-434c-41fd-b806-9dac66a77e44)
 ## Features:
 ### Top Panel:
 - **Icon Hue/Contrast/Brightness** - Settings for the icon that is displayed by default (First image in row).
