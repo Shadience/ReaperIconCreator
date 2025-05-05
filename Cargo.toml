@@ -3,6 +3,13 @@ name = "ReaperIconCreator"
 version = "0.9.6"
 edition = "2024"
 
+# [features]
+# persistence = [
+#   "eframe/persistence",
+#   "image/serde",
+#   "serde",
+# ]
+
 [dependencies]
 eframe = { version = "0.31.1", features = ["persistence"] }
 egui_extras = { version = "0.31.1", features = ["all_loaders"] }
